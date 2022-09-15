@@ -10,6 +10,7 @@ const addContainerListeners = (currentContainer) => {
     addItemBtnListeners(currentAddItemBtn);
     closingFormBtnsListeners(currentCloseFormBtn);
     addFormSubmitListeners(currentForm);
+    addDragNDropListeners(currentContainer);
 };
 // Remove Item
 const deleteBtnListeners = (btn) => {
@@ -26,6 +27,12 @@ const closingFormBtnsListeners = (btn) => {
 // submit Form
 const addFormSubmitListeners = (form) => {
     form.addEventListener("submit", createNewItem);
+};
+const addDragNDropListeners = (element) => {
+    element.addEventListener("dragstart", handleDragStart);
+    element.addEventListener("dragover", handleDragOver);
+    element.addEventListener("drop", handleDrop);
+    element.addEventListener("dragend", handleDragEnd);
 };
 const handleContainerDelete = (e) => {
     const btn = e.target;
@@ -80,6 +87,7 @@ const createNewItem = (e) => {
     const item = actualUL.lastElementChild;
     const liBtn = item.querySelector("button");
     handleItemDelete(liBtn);
+    addDragNDropListeners(item);
     actualTextInput.value = "";
 };
 const handleItemDelete = (btn) => {
@@ -89,6 +97,57 @@ const handleItemDelete = (btn) => {
     });
 };
 itemsContainers.forEach((container) => addContainerListeners(container));
+// Drag N Drop
+let dragSrcEl;
+function handleDragStart(e) {
+    var _a;
+    e.stopPropagation();
+    if (actualContainer)
+        toggleForm(actualBtn, actualForm, false);
+    dragSrcEl = this;
+    (_a = e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData('text/html', this.innerHTML);
+}
+function handleDragOver(e) {
+    e.preventDefault();
+}
+function handleDrop(e) {
+    var _a;
+    e.stopPropagation();
+    const receptionEl = this;
+    if (dragSrcEl.nodeName === "LI" && receptionEl.classList.contains("items-container")) {
+        receptionEl.querySelector("ul").appendChild(dragSrcEl);
+        addDragNDropListeners(dragSrcEl);
+        handleItemDelete(dragSrcEl.querySelector("button"));
+    }
+    if (dragSrcEl !== this && this.classList[0] === dragSrcEl.classList[0]) {
+        dragSrcEl.innerHTML = this.innerHTML;
+        this.innerHTML = (_a = e.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData("text/html");
+        if (this.classList.contains('items-container')) {
+            addContainerListeners(this);
+            this.querySelectorAll("li").forEach((li) => {
+                handleItemDelete(li.querySelector("button"));
+                addDragNDropListeners(li);
+            });
+        }
+        else {
+            addDragNDropListeners(this);
+            handleItemDelete(this.querySelector("button"));
+        }
+    }
+}
+function handleDragEnd(e) {
+    e.stopPropagation();
+    if (this.classList.contains("items-container")) {
+        addContainerListeners(this);
+        this.querySelectorAll("li").forEach((li) => {
+            handleItemDelete(li.querySelector("button"));
+            addDragNDropListeners(li);
+        });
+    }
+    else {
+        addDragNDropListeners(this);
+    }
+}
 // Add new container
 const addContainerBtn = document.querySelector(".add-container-btn");
 const addContainerForm = document.querySelector(".add-new-container form");

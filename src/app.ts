@@ -18,6 +18,7 @@ const addContainerListeners = (currentContainer: HTMLDivElement) => {
   addItemBtnListeners(currentAddItemBtn)
   closingFormBtnsListeners(currentCloseFormBtn)
   addFormSubmitListeners(currentForm)
+  addDragNDropListeners(currentContainer)
 }
 
 // Remove Item
@@ -35,6 +36,13 @@ const closingFormBtnsListeners = (btn: HTMLButtonElement) => {
 // submit Form
 const addFormSubmitListeners = (form: HTMLFormElement) => {
   form.addEventListener("submit", createNewItem)
+}
+
+const addDragNDropListeners = (element: HTMLElement) => {
+  element.addEventListener("dragstart", handleDragStart)
+  element.addEventListener("dragover", handleDragOver)
+  element.addEventListener("drop", handleDrop)
+  element.addEventListener("dragend", handleDragEnd)
 }
 
 
@@ -93,7 +101,8 @@ const createNewItem = (e: Event) => {
   
   const item = actualUL.lastElementChild as HTMLLIElement
   const liBtn = item.querySelector("button") as HTMLButtonElement
-  handleItemDelete(liBtn);
+  handleItemDelete(liBtn)
+  addDragNDropListeners(item)
   actualTextInput.value = ""
 }
 
@@ -106,6 +115,62 @@ const handleItemDelete = (btn: HTMLButtonElement) => {
 }
 
 itemsContainers.forEach((container: HTMLDivElement) => addContainerListeners(container))
+
+// Drag N Drop
+
+let dragSrcEl: HTMLElement
+
+function handleDragStart(this: HTMLElement, e:DragEvent) {
+  e.stopPropagation()
+  if (actualContainer) toggleForm(actualBtn, actualForm, false)
+  dragSrcEl = this
+  e.dataTransfer?.setData('text/html', this.innerHTML)
+}
+
+function handleDragOver(e: DragEvent) {
+  e.preventDefault()
+
+}
+
+function handleDrop(this: HTMLElement, e: DragEvent) {
+  e.stopPropagation()
+  const receptionEl = this
+
+  if (dragSrcEl.nodeName === "LI" && receptionEl.classList.contains("items-container")) {
+    (receptionEl.querySelector("ul") as HTMLUListElement).appendChild(dragSrcEl)
+    addDragNDropListeners(dragSrcEl)
+    handleItemDelete(dragSrcEl.querySelector("button") as HTMLButtonElement)
+
+  }
+  if (dragSrcEl !== this && this.classList[0] === dragSrcEl.classList[0]) {
+    dragSrcEl.innerHTML = this.innerHTML
+    this.innerHTML = e.dataTransfer?.getData("text/html") as string
+    if (this.classList.contains('items-container')) {
+      addContainerListeners(this as HTMLDivElement)
+
+      this.querySelectorAll("li").forEach((li: HTMLLIElement) => {
+        handleItemDelete(li.querySelector("button") as HTMLButtonElement)
+        addDragNDropListeners(li)
+      })
+    } else {
+      addDragNDropListeners(this)
+      handleItemDelete(this.querySelector("button") as HTMLButtonElement)
+    }
+  } 
+}
+
+function handleDragEnd(this: HTMLElement, e: DragEvent) {
+  e.stopPropagation()
+  if (this.classList.contains("items-container")) {
+    addContainerListeners(this as HTMLDivElement)
+    this.querySelectorAll("li").forEach((li: HTMLLIElement) => {
+      handleItemDelete(li.querySelector("button") as HTMLButtonElement)
+      addDragNDropListeners(li)
+    })
+  } else {
+    addDragNDropListeners(this)
+  }
+}
 
 // Add new container
 
