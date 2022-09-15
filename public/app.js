@@ -1,5 +1,5 @@
 "use strict";
-const itemsContainer = document.querySelectorAll(".items-container");
+const itemsContainers = document.querySelectorAll(".items-container");
 let actualContainer, actualBtn, actualUL, actualForm, actualTextInput, actualValidation;
 const addContainerListeners = (currentContainer) => {
     const currentContainerDeleteBtn = currentContainer.querySelector(".delete-container-btn");
@@ -88,4 +88,48 @@ const handleItemDelete = (btn) => {
         elToRemove.remove();
     });
 };
-itemsContainer.forEach((container) => addContainerListeners(container));
+itemsContainers.forEach((container) => addContainerListeners(container));
+// Add new container
+const addContainerBtn = document.querySelector(".add-container-btn");
+const addContainerForm = document.querySelector(".add-new-container form");
+const addContainerFormInput = document.querySelector(".add-new-container input");
+const validationNewContainer = document.querySelector(".add-new-container .validation-msg");
+const addContainerCloseBtn = document.querySelector(".close-add-list");
+const addNewContainer = document.querySelector(".add-new-container");
+const containersList = document.querySelector(".main-content");
+addContainerBtn.addEventListener("click", () => toggleForm(addContainerBtn, addContainerForm, true));
+addContainerCloseBtn.addEventListener("click", () => toggleForm(addContainerBtn, addContainerForm, false));
+addContainerForm.addEventListener("submit", (e) => createNewContainer(e));
+const createNewContainer = (e) => {
+    e.preventDefault();
+    if (addContainerFormInput.value.length === 0) {
+        validationNewContainer.textContent = "Must be at leats 1 charactere long";
+        return;
+    }
+    else {
+        validationNewContainer.textContent = "";
+    }
+    const itemsContainer = document.querySelector(".items-container");
+    const newContainer = itemsContainer.cloneNode();
+    const newContainerContent = `
+    <div class="top-container">
+      <h2>${addContainerFormInput.value}</h2>
+      <button class="delete-container-btn">X</button>
+    </div>
+    <ul></ul>
+    <button class="add-item-btn">Add an item</button>
+    <form autocomplete="off">
+      <div class="top-form-container">
+        <label for="item">Add a new item</label>
+        <button type="button" class="close-form-btn">X</button>
+      </div>
+      <input type="text" id="item" />
+      <span class="validation-msg"></span>
+      <button type="submit">Submit</button>
+    </form>
+  `;
+    newContainer.innerHTML = newContainerContent;
+    containersList.insertBefore(newContainer, addNewContainer);
+    addContainerFormInput.value = "";
+    addContainerListeners(newContainer);
+};
